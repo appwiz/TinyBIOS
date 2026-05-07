@@ -32,7 +32,6 @@
 #ifndef __TINY_BOCHS_FB_H__
 #define __TINY_BOCHS_FB_H__
 
-#include <sys/types.h>
 #include <sys/io.h>
 
 #include <drivers/device.h>
@@ -121,5 +120,7 @@ static inline void __attribute__((always_inline)) bochs_vbe_out(uint16_t addr, u
 static inline uint16_t __attribute__((always_inline)) bochs_vbe_version(uint16_t addr) {
     return bochs_vbe_in(addr, bochs_vbe_idx_id);
 }
+
+enum DEVICE_STATUS init_vga_controller(device *vgadev);
 
 #endif // __TINY_BOCHS_FB_H__

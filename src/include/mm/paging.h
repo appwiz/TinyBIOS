@@ -37,7 +37,6 @@
 #include <mainboards/memory_init.h>
 
 #include <stdint.h>
-#include <stdlib.h>
 
 /**
  * Helper structures for page tables and co
@@ -50,8 +49,10 @@ typedef struct __attribute__ ((packed)) {
     unsigned write_through  : 1;
     unsigned cache_disable  : 1;
     unsigned accessed       : 1;
-    unsigned resvd1         : 5;
-    uint64_t addr           : 58;
+    unsigned resvd1         : 6;
+    unsigned long long addr : 40;
+    unsigned avl            : 11;
+    unsigned nx             : 1;
 } page_table_entry;
 
 /**
@@ -65,10 +66,6 @@ static inline page_table_entry * __attribute__((always_inline)) get_pml4(void) {
 
 static inline void __attribute__((always_inline)) set_pml4(page_table_entry *pml4) {
     asm volatile("mov   cr3, %0"::"r"(pml4));
-}
-
-static inline page_table_entry *alloc_map(uint64_t entry_count) {
-    return (page_table_entry *)calloc(entry_count, sizeof(page_table_entry));
 }
 
 void init_paging(memory_map *mem_map);

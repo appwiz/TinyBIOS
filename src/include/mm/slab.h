@@ -18,7 +18,7 @@ typedef struct {
     SlabIndexType num_entries;
 
     // Size of the bitmap in bytes
-    uint32_t      bitmap_size;
+    uint64_t      bitmap_size;
 } SlabHeader;
 
 /*
@@ -29,7 +29,7 @@ typedef struct {
  * @param mem_end         Memory address where the slab allocator region ends
  * @param allocation_size Size of single objects in this allocator
  */
-void init_slab(uint32_t mem_start, uint32_t mem_end, size_t allocation_size);
+void init_slab(uint64_t mem_start, uint64_t mem_end, size_t allocation_size);
 
 /*
  * Calculate the overhead of a given slab allocator.
@@ -39,7 +39,7 @@ void init_slab(uint32_t mem_start, uint32_t mem_end, size_t allocation_size);
  */
 static inline size_t slab_overhead(const SlabHeader* slab) {
     size_t overhead = sizeof(SlabHeader) + slab->bitmap_size;
-    return overhead + (slab->allocation_size - (overhead % slab->allocation_size));
+    return overhead ; //+ (slab->allocation_size - (overhead % slab->allocation_size));
 }
 
 /*
@@ -49,8 +49,8 @@ static inline size_t slab_overhead(const SlabHeader* slab) {
  * @param idx  Index of the object in the allocator
  * @returns Memory address of the object
  */
-static inline uint32_t slab_mem(const SlabHeader* slab, const SlabIndexType idx) {
-    return (idx * slab->allocation_size) + slab_overhead(slab) + (uint32_t)slab;
+static inline uint64_t slab_mem(const SlabHeader* slab, const SlabIndexType idx) {
+    return (idx * slab->allocation_size) + slab_overhead(slab) + (uint64_t)slab;
 }
 
 /*
@@ -60,8 +60,8 @@ static inline uint32_t slab_mem(const SlabHeader* slab, const SlabIndexType idx)
  * @param mem  Memory address to calculate index
  * @returns    Index of the given memory address in the allocator
  */
-static inline SlabIndexType slab_index(const SlabHeader* slab, const uint32_t mem) {
-    return (mem - slab_overhead(slab) - (uint32_t)slab) / slab->allocation_size;
+static inline SlabIndexType slab_index(const SlabHeader* slab, const uint64_t mem) {
+    return (mem - slab_overhead(slab) - (uint64_t)slab) / slab->allocation_size;
 }
 
 /*
@@ -70,13 +70,15 @@ static inline SlabIndexType slab_index(const SlabHeader* slab, const uint32_t me
  * @param   slab mem_start given to init_slab before
  * @returns Address in memory with the allocated object, NULL if full
  */
-static inline uint32_t slab_alloc(SlabHeader* slab) {
-    bitmap_t bitmap = (bitmap_t)((uint32_t)slab + sizeof(SlabHeader));
+#include <console/console.h>
+static inline uint64_t slab_alloc(SlabHeader* slab) {
+    bitmap_t bitmap = (bitmap_t)((uint64_t)slab + sizeof(SlabHeader));
 
     SlabIndexType idx;
     for(idx = 0; idx < slab->num_entries && bitmap_get(bitmap, idx); ++idx);
 
     if(idx < slab->num_entries) {
+        blogf("Got free entry in slab: %x\n", idx);
         bitmap_set(bitmap, idx);
         return slab_mem(slab, idx);
     }
@@ -89,8 +91,8 @@ static inline uint32_t slab_alloc(SlabHeader* slab) {
  * @param slab   mem_start given to init_slab before
  * @param memory Address to mark as free
  */
-static inline void slab_free(SlabHeader* slab, uint32_t mem) {
-    bitmap_t bitmap = (bitmap_t)((uint32_t)slab + sizeof(SlabHeader));
+static inline void slab_free(SlabHeader* slab, uint64_t mem) {
+    bitmap_t bitmap = (bitmap_t)((uint64_t)slab + sizeof(SlabHeader));
     bitmap_clear(bitmap, slab_index(slab, mem));
 }
 

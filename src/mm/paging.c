@@ -30,6 +30,7 @@
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <mm/slab.h>
 #include <mm/paging.h>
 #include <mainboards/memory_init.h>
 #include <stdint.h>
@@ -37,39 +38,67 @@
 #include <panic.h>
 
 #include <stdint.h>
+#include <string.h>
 
-static page_table_entry *pml4;
-static page_table_entry *pdpt;
-static page_table_entry *pte_array;
+static const uint64_t pd_addr = 0xc000;
+static const uint64_t pd_size = 1024 * sizeof(page_table_entry);
 
-static uint64_t memory_size_in_megabytes(memory_map *mem_map) {
-    uint64_t ret = 0;
-    uint64_t tmp = 0;
+static const uint64_t pml4_addr = 0xa000;
+static const uint64_t pml4_size  = 512 * sizeof(page_table_entry);
 
-    for (uint8_t i = 0; i < mem_map->count; i++) {
-        tmp += mem_map->entry[i]->size;
-        if (tmp >= (1024 * 1024)) {
-            ret++;
-            tmp = 0;
-        }
-    }
-    return ret;
+static const uint64_t page_table_addr = 0x10000;
+static const uint64_t page_table_size = (0x50000 - 0x10000);
+static SlabHeader *page_table_pool = (SlabHeader *)(page_table_addr - sizeof(SlabHeader) - 4); 
+
+static page_table_entry *pd = (page_table_entry *)pd_addr;
+static page_table_entry *pml4 = (page_table_entry *)pml4_addr;
+
+static page_table_entry *get_pd(uint64_t idx) {
+    return (page_table_entry *)(&pd[idx]);
 }
 
-static void map_page(page_table_entry *entry, void *addr) {
-    uint64_t v_addr = ((uint64_t)addr) >> 22;
-    entry->addr = v_addr;
-    entry->present = 1;
-    entry->writable = 1;
-    entry->unprivileged = 1;
+static page_table_entry *get_pte(page_table_entry *pt, uint64_t idx) {
+    return (page_table_entry *)(&pt[idx]);
 }
 
-bool map_address(void *addr, uint64_t size) {
-    if (size & 0x00000FFF) {
-        blogf("refusing to map unaligned memory: 0x%x bytes\n", size);
+static page_table_entry *get_pt_from_pd(page_table_entry *pde) {
+    return (page_table_entry *)( (*(uint64_t *)pde) & 0xFFFFF000);
+}
+
+static page_table_entry *alloc_page_table(void) {
+    return (page_table_entry *)slab_alloc(page_table_pool);
+}
+
+static void populate_entry(page_table_entry *e, uint64_t addr, bool write, bool present) {
+    memset(e, 0, sizeof(page_table_entry));
+    e->writable = write;
+    e->present = present;
+    e->addr = (addr >> 12);
+}
+
+bool map_page(void *physical, void *virtual) {
+    uint64_t pd_idx = ((uint64_t)virtual >> 22);
+    if (pd_idx > (pml4_size * pd_size)) {
         return false;
     }
-    uint64_t vaddr = (uint64_t)addr;
+    page_table_entry *pd_e = get_pd(pd_idx);
+    page_table_entry *pt = NULL;
+    if (!pd_e->present) {
+        pt = alloc_page_table();
+        if (!pt) {
+            return false;
+        }
+        populate_entry(pd_e, (uint64_t)pt, 1, 1);
+    } else {
+        pt = get_pt_from_pd(pd_e);
+    }
+    uint64_t pt_idx = ((uint64_t)virtual >> 12) & 0x03FF;
+    page_table_entry *pt_e = get_pte(pt, pt_idx);
+
+    if (pt_e->present) {
+        return false;
+    }
+    populate_entry(pt_e, ((uint64_t)physical & 0x00000000FFFFF000), 1, 1);
 
     return true;
 }
@@ -77,43 +106,44 @@ bool map_address(void *addr, uint64_t size) {
 void init_paging(memory_map *mem_map) {
     // 1 page = 4 KB -> mbytes / 0x1000
     //
-    uint64_t mbytes_to_map = memory_size_in_megabytes(mem_map);
-    mbytes_to_map *= 1024; // megabytes -> kilobytes 
-    uint64_t pages_to_map = mbytes_to_map / 0x1000;
-    uint64_t pdpt_cnt = pages_to_map / 1024;
-    uint64_t pml4_cnt = pdpt_cnt / 1024;
+    memset((void *)pd_addr, 0, pd_size);
+    memset((void *)pml4_addr, 0, pml4_size);
+    memset((void *)page_table_pool, 0, (1024 * sizeof(page_table_entry) + sizeof(SlabHeader) + 4));
+    init_slab(page_table_addr - sizeof(SlabHeader) - 4, page_table_addr + page_table_size, (1024 * sizeof(page_table_entry)));
 
-    if (!pdpt_cnt) 
-        pdpt_cnt = 1;
-    if (!pml4_cnt) 
-        pml4_cnt = 1;
-
-    pte_array = alloc_map(pages_to_map);
-    pdpt = alloc_map(pdpt_cnt);
-    pml4 = alloc_map(pml4_cnt);
-
-    if (!pte_array || !pdpt || !pml4) {
-        panic_oom("Failed to allocate memory for paging structures");
-    }
-
-    map_page(&pdpt[0], &pte_array[0]);
-    map_page(&pml4[0], &pdpt[0]);
-
-    uint64_t pdpt_off = 0;
-    uint64_t pml4_off = 0;
-
-    for (uint64_t page = 0; page < pages_to_map; page++) {
-        map_page(&pte_array[page], (void *)(page * 0x1000));
-        if (page && ((page % 1024) == 0)) {
-            pdpt_off++;
-            map_page(&pdpt[pdpt_off], &pte_array[page]);
-        }
-        if (pdpt_off && ((pdpt_off % 1024) == 0)) {
-            pml4_off++;
-            map_page(&pml4[pml4_off], &pdpt[pdpt_off]);
+    // Identity map all of the low memory
+    for (uint64_t addr = 0; addr < 0x100000; addr += 0x1000) {
+        bool stat = map_page((void *)addr, (void *)addr);
+        if (stat == false) {
+            panic("Mapping failed\n");
         }
     }
-    set_pml4(pml4);
+
+    // Map rest of the memory we're aware of (if any)
+    //
+    for (uint64_t idx = 0; idx < mem_map->count; idx++) {
+        if (mem_map->entry[idx]->type != 1) {
+            continue;
+        }
+        if (mem_map->entry[idx]->addr < 0x100000) {
+            continue;
+        }
+        uint64_t page_cnt = (mem_map->entry[idx]->size / 0x1000);
+        uint64_t addr = mem_map->entry[idx]->addr & 0xFFFFF000;
+        do {
+            bool got = map_page((void *)addr, (void *)addr);
+            if (got == false) {
+                break;
+            }
+            addr += 0x1000;
+        } while (page_cnt--);
+    }
+
+    page_table_entry *pml4e = (page_table_entry *)((*(uint64_t *)pml4) & 0xFFFFF000);
+    page_table_entry *pde = (page_table_entry *)pd_addr;
+    populate_entry(pml4e, (uint64_t)pde, 1, 1);
+
+    set_pml4(pml4e);
 
     return;
 }

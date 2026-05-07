@@ -51,6 +51,7 @@
 #include <drivers/ata/ata.h>
 
 #include <mainboards/memory_init.h>
+#include <mainboards/qemu/bochsfb.h>
 
 #include <mm/paging.h>
 
@@ -130,7 +131,6 @@ void post_and_init(void) {
     uart_dev = new_device(sizeof(serial_uart_device));
     switch_output_device(uart_dev, serial_init_device, serial_tx, "UART 1");
 
-
     memory_device                     = new_device(sizeof(memory_map));
     programmable_interrupt_controller = new_device(sizeof(pic_full_configuration));
     cmos_dev                          = new_device(sizeof(cmos_data));
@@ -150,6 +150,17 @@ void post_and_init(void) {
     pci_print_devtree(pci_device_array, devcnt);
     ata_ide_array = calloc(1, sizeof(ata_ide **));
     uint8_t ide_cnt = init_ata_controllers(pci_device_array, ata_ide_array, devcnt);
+
+    init_vga_controller(pci_device_array[2]);
+    pci_device_data *pci = pci_device_array[2]->device_data;
+    uint64_t b = (uint64_t)pci_decode_bar(pci_read_bar(&pci->address, 0));
+    blogf("VGAMEM @ 0x%x\n", b);
+
+    uint16_t *test = (uint16_t *)b;
+
+    for (int i = 0; i < 30; i++) {
+        test[i] = 0x0a41;
+    }
 
 } 
 
