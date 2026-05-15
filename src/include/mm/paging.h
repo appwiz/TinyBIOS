@@ -69,5 +69,6 @@ static inline void __attribute__((always_inline)) set_pml4(page_table_entry *pml
 }
 
 void init_paging(memory_map *mem_map);
+bool map_page(void *physical, void *virtual);
 
 #endif

@@ -96,7 +96,6 @@ bool map_page(void *physical, void *virtual) {
     page_table_entry *pt_e = get_pte(pt, pt_idx);
 
     if (pt_e->present) {
-        return false;
     }
     populate_entry(pt_e, ((uint64_t)physical & 0x00000000FFFFF000), 1, 1);
 

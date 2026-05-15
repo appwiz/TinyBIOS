@@ -155,12 +155,15 @@ void post_and_init(void) {
     pci_device_data *pci = pci_device_array[2]->device_data;
     uint64_t b = (uint64_t)pci_decode_bar(pci_read_bar(&pci->address, 0));
     blogf("VGAMEM @ 0x%x\n", b);
-
-    uint16_t *test = (uint16_t *)b;
-
-    for (int i = 0; i < 30; i++) {
-        test[i] = 0x0a41;
+    bool stat = map_page((void *)b, (void *)b);
+    if (stat == true) {
+        blogf("Mapped vgamem to 0x%x\n", b);
+        uint16_t *test = (uint16_t *)b;
+        for (int i = 0; i < 2048; i++) {
+            *test = 0x0505;
+        }
+    } else {
+        blogf("Mapping 0x%x => 0x%x failed\n", b, b);
     }
-
 } 
 

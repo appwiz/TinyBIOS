@@ -73,11 +73,10 @@ enum DEVICE_STATUS init_vga_controller(device *vgadev) {
     bochs_vbe_out(base, 480, bochs_vbe_idx_v_height);
     bochs_vbe_out(base, 0, bochs_vbe_idx_x_off);
     bochs_vbe_out(base, 0, bochs_vbe_idx_y_off);
-    // bochs_vbe_out(base, 0x01, bochs_vbe_idx_enable);
     outb(0x20, (base + 0x03c0));
+    bochs_vbe_out(base, 0x41, bochs_vbe_idx_enable);
+
     pci_write_config(&pdev->address, 0x10, 0x1000008);
-    bochs_vbe_enable(base);
-    // bochs_vbe_out(base, 0x41, bochs_vbe_idx_enable);
 
     return status_initialised;
 }

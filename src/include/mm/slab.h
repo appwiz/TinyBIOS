@@ -70,7 +70,6 @@ static inline SlabIndexType slab_index(const SlabHeader* slab, const uint64_t me
  * @param   slab mem_start given to init_slab before
  * @returns Address in memory with the allocated object, NULL if full
  */
-#include <console/console.h>
 static inline uint64_t slab_alloc(SlabHeader* slab) {
     bitmap_t bitmap = (bitmap_t)((uint64_t)slab + sizeof(SlabHeader));
 
@@ -78,7 +77,6 @@ static inline uint64_t slab_alloc(SlabHeader* slab) {
     for(idx = 0; idx < slab->num_entries && bitmap_get(bitmap, idx); ++idx);
 
     if(idx < slab->num_entries) {
-        blogf("Got free entry in slab: %x\n", idx);
         bitmap_set(bitmap, idx);
         return slab_mem(slab, idx);
     }
