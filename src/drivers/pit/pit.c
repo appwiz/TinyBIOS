@@ -41,11 +41,7 @@
 
 #include <interrupts/idt.h>
 
-void __attribute__((section(".rom_int_handler"), interrupt)) pit_int_handler(int_stack_frame *frame) {
-    pic_send_eoi(0);
-
-}
-
+extern void int_handler_entry(void);
 
 /* Setup PIT with default init.
  *
@@ -65,7 +61,7 @@ enum DEVICE_STATUS pit_init(device *dev __attribute__((unused))) {
     outb(0x00, 0x40);
     outb(0x10, 0x40);
 
-    add_interrupt_handler(0x20, (uint64_t)pit_int_handler);
+    add_interrupt_handler(0x20, (uint64_t)int_handler_entry);
     
     return status_initialised;
 }

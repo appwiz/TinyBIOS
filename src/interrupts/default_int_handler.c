@@ -33,9 +33,19 @@
 #include <drivers/pic_8259/pic.h>
 #include <panic.h>
 
+#include <console/console.h>
+
 void __attribute__((section(".rom_int_handler"))) default_int_handler(void) {
     uint16_t isr = pic_read_isr();
     uint16_t irr = pic_read_irr();
-    panic("Unhandled interrupt, isr: %04x, irr: %04x\n", isr, irr);
+
+    switch (isr) {
+        case (0):
+            break;
+
+    default:
+        panic("Unhandled interrupt, isr: %04x, irr: %04x\n", isr, irr);
+    }
+    pic_send_eoi(isr);
 }
 

@@ -41,6 +41,7 @@
 
 int_desc_table *idt;
 extern void int_handler_entry(void);
+extern void spurious_int_handler_entry(void);
 
 /* Setup interrupt descriptor table to use
  *
@@ -53,6 +54,10 @@ void init_idt(void) {
     idt->ptr = (uint64_t)(&idt->entry[0]); 
     idt->size = (256 * 16) - 1;
     for (int i = 0; i < 256; i++) {
+        if (i == 7 || i == 15) {
+            /* Deal with 'spurious' interrupts */
+            add_interrupt_handler(i, (uint64_t)spurious_int_handler_entry);
+        }
         add_interrupt_handler(i, (uint64_t)int_handler_entry);
     }
     write_idtr((void *)idt);

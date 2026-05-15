@@ -32,8 +32,13 @@
 
 .section .rom_int_handler
 .global int_handler_entry
+.global spurious_int_handler_entry
 .code64
 int_handler_entry:
+    cli
+    push    rbp
+    mov     rbp, rsp
+
     push    rax
     push    rcx
     push    rdx
@@ -51,5 +56,41 @@ int_handler_entry:
     pop     rdx
     pop     rcx
     pop     rax
-    iret
+
+    mov     rsp, rbp
+    pop     rbp
+
+    iretq
+
+spurious_int_handler_entry:
+    cli
+    push    rbp
+    mov     rbp, rsp
+
+    push    rax
+    push    rcx
+    push    rdx
+    push    r8
+    push    r9
+    push    r10
+    push    r11
+
+    call    pic_read_isr
+    test    ax, ax
+    jz      .end
+    call    default_int_handler
+
+.end:
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    pop     rdx
+    pop     rcx
+    pop     rax
+
+    mov     rsp, rbp
+    pop     rbp
+
+    iretq
 
