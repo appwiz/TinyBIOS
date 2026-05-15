@@ -40,7 +40,7 @@
 #include <panic.h>
 
 int_desc_table *idt;
-extern void default_int_handler(void); 
+extern void int_handler_entry(void);
 
 /* Setup interrupt descriptor table to use
  *
@@ -53,7 +53,7 @@ void init_idt(void) {
     idt->ptr = (uint64_t)(&idt->entry[0]); 
     idt->size = (256 * 16) - 1;
     for (int i = 0; i < 256; i++) {
-        add_interrupt_handler(i, (uint64_t)default_int_handler);
+        add_interrupt_handler(i, (uint64_t)int_handler_entry);
     }
     write_idtr((void *)idt);
 }

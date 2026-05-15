@@ -199,9 +199,8 @@ ata_ide *ata_init_ide(device *ide) {
  * @param device **pci_device_array -- Pointer to device array
  * @param ata_ide **ata_ide_array   -- Where to store our ATA IDE structures
  * @param uint8_t pci_dev_cnt       -- Amount of devices we've found
- * @return uint8_t amount of IDE controllers we've intialized
  */
-uint8_t init_ata_controllers(device **pci_device_array, ata_ide **ata_ide_array, uint8_t pci_dev_cnt) {
+void init_ata_controllers(device **pci_device_array, ata_ide **ata_ide_array, uint8_t pci_dev_cnt) {
     uint8_t ide_count = 0;
     for (uint8_t offset = 0; offset < pci_dev_cnt; offset++) {
         device *dev = pci_device_array[offset];
@@ -218,6 +217,5 @@ uint8_t init_ata_controllers(device **pci_device_array, ata_ide **ata_ide_array,
             }
         }
     }
-    return ide_count;
 }
 

@@ -66,7 +66,7 @@ extern device *keyboard_controller_device;
 extern device *programmable_interrupt_controller;
 extern device *programmable_interrupt_timer;
 extern device **pci_device_array;
-extern ata_ide **ata_ide_array;
+extern ata_ide_array *ide_array;
 
 static inline char *ram_type_to_str(uint32_t type) {
     switch (type) {
@@ -82,8 +82,7 @@ static inline char *ram_type_to_str(uint32_t type) {
 }
 
 /* Initialize memory map stuff for us, first call mainboard-specific
- * function to handle init, if that fails, fallback to cmos.
- *
+ * function to handle init, if that fails, fallback to cmos.  *
  */
 enum DEVICE_STATUS init_memory_map(device *dev) {
     enum DEVICE_STATUS ret = status_initialised;
@@ -148,22 +147,9 @@ void post_and_init(void) {
     pci_device_array = calloc(32, sizeof(device **));
     uint8_t devcnt = enumerate_pci_buses(pci_device_array);
     pci_print_devtree(pci_device_array, devcnt);
-    ata_ide_array = calloc(1, sizeof(ata_ide **));
-    uint8_t ide_cnt = init_ata_controllers(pci_device_array, ata_ide_array, devcnt);
+    ide_array = calloc(1, sizeof(ata_ide_array));
+    ide_array->ide = calloc(1, sizeof(ata_ide **));
+    init_ata_controllers(pci_device_array, ide_array->ide, devcnt);
 
-    init_vga_controller(pci_device_array[2]);
-    pci_device_data *pci = pci_device_array[2]->device_data;
-    uint64_t b = (uint64_t)pci_decode_bar(pci_read_bar(&pci->address, 0));
-    blogf("VGAMEM @ 0x%x\n", b);
-    bool stat = map_page((void *)b, (void *)b);
-    if (stat == true) {
-        blogf("Mapped vgamem to 0x%x\n", b);
-        uint16_t *test = (uint16_t *)b;
-        for (int i = 0; i < 2048; i++) {
-            *test = 0x0505;
-        }
-    } else {
-        blogf("Mapping 0x%x => 0x%x failed\n", b, b);
-    }
 } 
 

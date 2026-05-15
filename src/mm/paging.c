@@ -69,11 +69,13 @@ static page_table_entry *alloc_page_table(void) {
     return (page_table_entry *)slab_alloc(page_table_pool);
 }
 
-static void populate_entry(page_table_entry *e, uint64_t addr, bool write, bool present) {
+static void populate_entry(page_table_entry *e, void *addr, bool write, bool present) {
+    uint64_t i_addr = (uint64_t)addr;
+    i_addr &= 0x00000000FFFFF000;
     memset(e, 0, sizeof(page_table_entry));
     e->writable = write;
     e->present = present;
-    e->addr = (addr >> 12);
+    e->addr = (i_addr >> 12);
 }
 
 bool map_page(void *physical, void *virtual) {
@@ -88,7 +90,7 @@ bool map_page(void *physical, void *virtual) {
         if (!pt) {
             return false;
         }
-        populate_entry(pd_e, (uint64_t)pt, 1, 1);
+        populate_entry(pd_e, pt, 1, 1);
     } else {
         pt = get_pt_from_pd(pd_e);
     }
@@ -97,7 +99,8 @@ bool map_page(void *physical, void *virtual) {
 
     if (pt_e->present) {
     }
-    populate_entry(pt_e, ((uint64_t)physical & 0x00000000FFFFF000), 1, 1);
+
+    populate_entry(pt_e, physical, 1, 1);
 
     return true;
 }
@@ -140,7 +143,7 @@ void init_paging(memory_map *mem_map) {
 
     page_table_entry *pml4e = (page_table_entry *)((*(uint64_t *)pml4) & 0xFFFFF000);
     page_table_entry *pde = (page_table_entry *)pd_addr;
-    populate_entry(pml4e, (uint64_t)pde, 1, 1);
+    populate_entry(pml4e, pde, 1, 1);
 
     set_pml4(pml4e);
 

@@ -19,6 +19,7 @@ add_executable(tinybios
     src/mm/paging.c
 
     src/interrupts/idt.c
+    src/interrupts/default_int_handler.S
     src/interrupts/default_int_handler.c
 
     src/romcall/romcall.c

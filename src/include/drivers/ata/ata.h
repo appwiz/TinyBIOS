@@ -251,6 +251,11 @@ typedef struct {
     device *ide_device_data;
 } ata_ide;
 
+typedef struct {
+    ata_ide **ide;
+    uint8_t ide_cnt;
+} ata_ide_array;
+
 /* Read given ata register
  *
  * @param uint16_t addr -- Register to read
@@ -361,9 +366,8 @@ bool ata_select_drive(ata_bus *bus, ata_drive_selection drive);
  * @param device **pci_device_array -- Pointer to device array
  * @param ata_ide **ata_ide_array   -- Where to store our ATA IDE structures
  * @param uint8_t pci_dev_cnt       -- Amount of devices we've found
- * @return uint8_t amount of IDE controllers we've intialized
  */
-uint8_t init_ata_controllers(device **pci_device_array, ata_ide **ata_ide_array, uint8_t pci_dev_cnt);
+void init_ata_controllers(device **pci_device_array, ata_ide **ata_ide_array, uint8_t pci_dev_cnt);
 
  /* Wait for given ata settings to change at status register
  *
