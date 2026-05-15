@@ -29,64 +29,68 @@
  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
 
-#include <panic.h>
-#include <post.h>
+.section .rom_int_handler
+.global int_handler_entry
+.global spurious_int_handler_entry
+.code64
+int_handler_entry:
+    cli
+    push    rbp
+    mov     rbp, rsp
 
-#include <sys/io.h>
+    push    rax
+    push    rcx
+    push    rdx
+    push    r8
+    push    r9
+    push    r10
+    push    r11
 
-#include <cpu/common.h>
-#include <superio/superio.h>
+    call    default_int_handler
 
-#include <drivers/device.h>
-#include <drivers/serial/serial.h>
-#include <drivers/kbdctl/8042.h>
-#include <drivers/pic_8259/pic.h>
-#include <drivers/pit/pit.h>
-#include <drivers/pci/pci.h>
-#include <drivers/cmos/cmos.h>
-#include <drivers/ata/ata.h>
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    pop     rdx
+    pop     rcx
+    pop     rax
 
-#include <console/console.h>
-#include <interrupts/interrupts.h>
-#include <interrupts/idt.h>
+    mov     rsp, rbp
+    pop     rbp
 
-#include <romcall/romcall.h>
-#include <stacks/ctx.h>
+    iretq
 
-heap_start *heap = (heap_start *)0x50000;
+spurious_int_handler_entry:
+    cli
+    push    rbp
+    mov     rbp, rsp
 
-device *memory_device = 0;
-device *cmos_dev = 0;
-device *uart_dev = 0;
-console_device default_console_device = {0};
-device *keyboard_controller_device = 0;
-device *programmable_interrupt_controller = 0;
-device *programmable_interrupt_timer = 0;
-device **pci_device_array = 0;
-ata_ide_array *ide_array = 0;
+    push    rax
+    push    rcx
+    push    rdx
+    push    r8
+    push    r9
+    push    r10
+    push    r11
 
-/* The C entrypoint for early initialisation for {hard,soft}ware
- *
- * This function should never return.
- */
- __attribute__ ((noreturn)) void c_main(void) {
-    superio_init();
+    call    pic_read_isr
+    test    ax, ax
+    jz      .end
+    call    default_int_handler
 
-    heap_init((uint64_t)heap, (0x7FFFF - 0x50000));
-    init_idt();
-    post_and_init();
+.end:
+    pop     r11
+    pop     r10
+    pop     r9
+    pop     r8
+    pop     rdx
+    pop     rcx
+    pop     rax
 
-    blog("Early chipset initialisation done\n");
-    blog("No payloads to execute, hang\n");
+    mov     rsp, rbp
+    pop     rbp
 
-    asm volatile("sti");
-
-    for (;;) { 
-        halt();
-    }
-}
+    iretq
 
