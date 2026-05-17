@@ -73,7 +73,7 @@ ata_ide_array *ide_array = 0;
  *
  * This function should never return.
  */
- __attribute__ ((noreturn)) void c_main(void) {
+ __attribute__ ((noreturn)) void main(void) {
     superio_init();
 
     heap_init((uint64_t)heap, (0x7FFFF - 0x50000));
@@ -81,8 +81,9 @@ ata_ide_array *ide_array = 0;
     post_and_init();
 
     blog("Early chipset initialisation done\n");
-    blog("No payloads to execute, hang\n");
+    find_and_exec_roms();
 
+    blog("No payloads left to execute, hang\n");
     asm volatile("sti");
 
     for (;;) { 

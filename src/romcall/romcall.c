@@ -53,12 +53,15 @@ static void *copy_rom_to_ram(uint64_t mem) {
         blogf("Incorrect rom size (0x%x), refusing to execute\n", size);
         return NULL;
     }
-    void *p = malloc(size);
+    void *p = malloc(size + 0x1000);
     if (!p) {
         blog("Unable to allocate memory for rom\n");
         return NULL;
     }
-    memcpy((void *)mem, p, size);
+    uint64_t diff = (0x1000 - ((uint64_t)p % 0x1000));
+    void *final_p = (void *)((uint64_t)p + diff);
+    memcpy((void *)mem, final_p, size);
+    blogf("Rom shadowed to start at 0x%x\n", final_p);
     return p;
 }
 
@@ -87,8 +90,8 @@ void find_and_exec_roms(void) {
         if (!shadow) {
             continue;
         }
+
         free(shadow);
     }
 }
-
 

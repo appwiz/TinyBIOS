@@ -167,6 +167,7 @@ init_cpu:
     // Start by moving to 32 bit protected mode
     push    eax
     call    switch_to_protected
+
     .code32
     pop     eax
     mov     esp, 0x00007c00
@@ -185,7 +186,7 @@ continue_entry_prep:
 
     xor     rdi, rdi
     xor     rsi, rsi
-    call    c_main
+    call    main
 
     // Never reached but better be overly careful 
 .hang:

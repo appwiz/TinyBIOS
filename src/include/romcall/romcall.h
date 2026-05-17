@@ -35,7 +35,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static const uint16_t rom_exec_sign = 0x55AA;
+static const uint16_t rom_exec_sign = 0xAA55;
 
 /* Check if this segment has a valid option rom signature
  *
@@ -44,7 +44,7 @@ static const uint16_t rom_exec_sign = 0x55AA;
  */
 static inline bool rom_header_present(uint64_t mem) {
     uint16_t *hdr = (uint16_t *)mem;
-    return (*hdr == rom_exec_sign);
+    return (hdr[0] == rom_exec_sign);
 }
 
 /* Get size of option rom code
