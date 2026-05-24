@@ -56,8 +56,8 @@ void blog(char *msg) {
     if (default_console_device.enabled == false) {
         return;
     }
-    serial_uart_device *udev = default_console_device.dev->device_data;
-    default_console_device.tx_func(udev->base_port, msg, strlen(msg));
+    
+    default_console_device.tx_func(default_console_device.dev, msg, strlen(msg));
 }
 
 /* Print a sinlge byte over default output device
@@ -69,8 +69,7 @@ static inline void bputchar(char c) {
         return;
     }
 
-    serial_uart_device *udev = default_console_device.dev->device_data;
-    default_console_device.tx_func(udev->base_port, &c, 1);
+    default_console_device.tx_func(default_console_device.dev, &c, 1);
 }
 
 /* Print single integer over default output device

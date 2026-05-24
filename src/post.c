@@ -128,7 +128,7 @@ bool switch_output_device(device *dev, device_init_function init_func, tx_func w
 
 void post_and_init(void) {
     uart_dev = new_device(sizeof(serial_uart_device));
-    switch_output_device(uart_dev, serial_init_device, serial_tx, "UART 1");
+    switch_output_device(uart_dev, serial_init_device, serial_console_tx, "UART 1");
 
     memory_device                     = new_device(sizeof(memory_map));
     programmable_interrupt_controller = new_device(sizeof(pic_full_configuration));

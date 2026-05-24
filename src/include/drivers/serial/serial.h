@@ -222,14 +222,14 @@ size_t serial_tx(unsigned short port, const char *msg, size_t len);
  */
 size_t serial_rx(unsigned short port, char *dst, const size_t size);
 
-/* printf() over serial line 
+/* Print/tx function for console output
  *
- * @param unsigned short port -- Device to write to
- * @param const unsigned char *msg  -- Absolute address to string to write
- * @param const size_t size -- size of message to print
- * @return amount of bytes transmitted
+ * @param device *dev -- Device to use for serial write
+ * @param unsigned char *dst -- Buffer to read to
+ * @param const size_t size -- How many bytes to read
+ * @return amount of bytes received 
  */
-int serprintf(const char *restrict format, ...);
+size_t serial_console_tx(device *dev, const char *msg, size_t size);
 
 static inline void uart_print_info(device *dev) {
     serial_uart_device *sdev = dev->device_data;

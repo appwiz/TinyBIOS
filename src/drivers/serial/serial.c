@@ -124,4 +124,15 @@ size_t serial_rx(unsigned short port, char *dst, const size_t size) {
     return i;
 }
 
+/* Print/tx function for console output
+ *
+ * @param device *dev -- Device to use for serial write
+ * @param unsigned char *dst -- Buffer to read to
+ * @param const size_t size -- How many bytes to read
+ * @return amount of bytes received 
+ */
+size_t serial_console_tx(device *dev, const char *msg, size_t size) {
+    serial_uart_device *udev = (serial_uart_device *)dev->device_data;
+    return serial_tx(udev->base_port, msg, size);
+}
 
