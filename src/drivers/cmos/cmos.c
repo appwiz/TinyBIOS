@@ -124,11 +124,27 @@ timedate *cmos_read_timedate(device *dev) {
         }
         *dst = rtc_read(dev, rtc_off);
     }
-    return ret;    
+    return ret;
 }
 
 static uint8_t bcd_convert(uint8_t bcd) {
     uint8_t v = bcd & 0x0F;
     return v + ( (bcd / 16) * 10 );
 }
+
+void cmos_print_current_time(device *dev) {
+    timedate *td = cmos_read_timedate(dev);
+    if (td) {
+        cmos_data *cd = dev->device_data;
+        uint8_t min = td->minute;
+        uint8_t hr  = td->hour;
+        if (cd->rtc_bcd_enabled) {
+            min = bcd_convert(min);
+            hr  = bcd_convert(hr);
+        }
+        blogf("Current time: %d:%d\n", hr, min);
+    }
+}
+
+
 

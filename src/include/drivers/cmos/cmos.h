@@ -181,7 +181,7 @@ static inline void cmos_read_memory_info(memory_map *map) {
  *
  * @param device *dev -- CMOS device structure
  */
-static void cmos_print_date(device *dev);
+void cmos_print_current_time(device *dev);
 
 /* Enable RTC interrupts
  *

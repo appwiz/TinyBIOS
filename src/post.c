@@ -116,7 +116,10 @@ bool switch_output_device(device *dev, device_init_function init_func, tx_func w
         dev->status = init_func(dev);
         dev->device_name = name;
         if (dev->status != status_initialised) {
-            blogf("Failed to switch to output device %s\n", name);
+            if (default_console_device.enabled) {
+                blogf("Failed to switch to output device %s\n", name);
+            }
+            return false;
         }
     }
     default_console_device.enabled = true;

@@ -81,6 +81,9 @@ ata_ide_array *ide_array = 0;
     post_and_init();
 
     blog("Early chipset initialisation done\n");
+    if (cmos_dev->status == status_initialised) {
+        cmos_print_current_time(cmos_dev);
+    }
     find_and_exec_roms();
 
     blog("No payloads left to execute, hang\n");

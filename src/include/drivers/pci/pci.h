@@ -290,26 +290,26 @@ void pci_print_devtree(device **pci_device_array, uint8_t device_count);
 static const char *pci_unknown_str = "other";
 
 static const char *pci_class_code_str[] = {
-    "unclassified",
-    "mass storage",
-    "network",
-    "display",
-    "multimedia",
-    "memory",
-    "bridge",
-    "simple comms",
-    "base system peripheral",
-    "input device",
-    "docking station",
-    "processor",
-    "serial bus",
-    "wireless",
-    "intelligent",
-    "satcom",
-    "encryption",
-    "signal processing",
-    "processing accelerator",
-    "non essential",
+    "Unclassified",
+    "Mass storage",
+    "Network",
+    "Display",
+    "Multimedia",
+    "Memory",
+    "Bridge",
+    "Simple comms",
+    "Base system peripheral",
+    "Input device",
+    "Docking station",
+    "Processor",
+    "Serial bus",
+    "Wireless",
+    "Intelligent",
+    "Satcom",
+    "Encryption",
+    "Signal processing",
+    "Processing accelerator",
+    "Non essential"
 };
 
 static const char *pci_subclass_str[] = {
@@ -326,15 +326,15 @@ static const char *pci_subclass_str[] = {
     "NV memory",
 
     // Net - 9
-    "ethernet",
-    "token ring",
+    "Ethernet",
+    "Token ring",
     "FDDI",
     "ATM",
     "ISDN",
     "WorldFip",
     "PICMG",
-    "infiniband",
-    "fabric",
+    "Infiniband",
+    "Fabric",
 
     // Display - 18
     "VGA",
@@ -343,35 +343,35 @@ static const char *pci_subclass_str[] = {
     
     // Memory - 21
     "RAM",
-    "flash",
+    "Flash",
 
     // Simple comms - 24
-    "serial",
-    "parallel",
-    "multiport serial",
-    "modem",
-    "iee 488",
-    "smart card",
+    "Serial",
+    "Parallel",
+    "Multiport serial",
+    "Modem",
+    "Iee 488",
+    "Smart card",
 
     // base system - 31
     "PIC",
     "DMA",
-    "timer",
+    "Timer",
     "RTC",
     "PCI",
     "SD",
     "IOMMU",
 
     // input - 37
-    "keyboard",
-    "digitizer pen",
-    "mouse",
-    "scanner",
-    "gameport",
+    "Keyboard",
+    "Digitizer pen",
+    "Mouse",
+    "Scanner",
+    "Gameport",
 
     // Serial bus - 41
-    "firewire",
-    "access bus",
+    "Firewire",
+    "Access bus",
     "SSA",
     "USB",
     "Fibre channel",
@@ -382,11 +382,11 @@ static const char *pci_subclass_str[] = {
     "CANbus",
 
     // Wireless - 51
-    "iRDA",
+    "IRDA",
     "IR",
     "RF",
-    "bluetooth",
-    "broadband",
+    "Bluetooth",
+    "Broadband",
     "802.1a",
     "802.1b",
 
@@ -403,6 +403,5 @@ static const char *pci_subclass_str[] = {
     "PCI",
     "InfiniBand to PCI",
 };
-
 
 #endif // __PCI_H__
